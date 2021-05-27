@@ -18,20 +18,21 @@ local defaultDrinkMacro = [[#showtooltip
 local function CreateOrUpdateMacro(macroName, text)
     local macroID = GetMacroIndexByName(macroName)
     if macroID == 0 then
-        CreateMacro(macroName, "Inv_misc_questionmark", text, nil, nil)
+        CreateMacro(macroName, 1, text)
     else
-        EditMacro(macroID, macroName, "Inv_misc_questionmark", text, nil, nil)
+        EditMacro(macroID, macroName, 1, text)
     end
 end
 
 NeedsFoodBadly = CreateFrame("frame")
-NeedsFoodBadly:RegisterEvent("BAG_UPDATE_DELAYED")
+NeedsFoodBadly:RegisterEvent("BAG_UPDATE")
 NeedsFoodBadly:RegisterEvent("PLAYER_REGEN_ENABLED")
 NeedsFoodBadly:RegisterEvent("PLAYER_LEVEL_UP")
+NeedsFoodBadly:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 NeedsFoodBadly.dirty = false
 NeedsFoodBadly:SetScript("OnEvent", function (self, event, ...)
-    if event == "BAG_UPDATE_DELAYED" or event == "PLAYER_LEVEL_UP" then
+    if event == "BAG_UPDATE" or event == "PLAYER_LEVEL_UP" or event == "PLAYER_ENTERING_WORLD" then
         if InCombatLockdown() then 
             NeedsFoodBadly.dirty = true
         else
@@ -167,7 +168,7 @@ end
 local function FirstAidSkillPoints()
     for i = 1, GetNumSkillLines() do
         local skillName, _, _, skillRank, numTempPoints, skillModifier = GetSkillLineInfo(i)
-        if skillName == PROFESSIONS_FIRST_AID then
+        if skillName == "First Aid" then
             return skillRank + numTempPoints + skillModifier
         end
     end
