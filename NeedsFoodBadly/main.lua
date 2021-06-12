@@ -23,12 +23,15 @@ local function CreateOrUpdateMacro(macroName, text)
         EditMacro(macroID, macroName, 1, text)
     end
 end
+local SHAMAN = select(2,UnitClass("player")) == "SHAMAN"
+local AstralRecall = IsSpellKnown(556)
 
 NeedsFoodBadly = CreateFrame("frame")
 NeedsFoodBadly:RegisterEvent("BAG_UPDATE")
 NeedsFoodBadly:RegisterEvent("PLAYER_REGEN_ENABLED")
 NeedsFoodBadly:RegisterEvent("PLAYER_LEVEL_UP")
 NeedsFoodBadly:RegisterEvent("PLAYER_ENTERING_WORLD")
+if SHAMAN then NeedsFoodBadly:RegisterEvent("LEARNED_SPELL_IN_TAB") end
 
 NeedsFoodBadly.dirty = false
 NeedsFoodBadly:SetScript("OnEvent", function (self, event, ...)
@@ -92,13 +95,13 @@ function NeedsFoodBadly:UpdateMacros()
     best.manaGem = self:Sorted(best.manaGem, self.BetterManaGem)
     best.bandage = self:Sorted(best.bandage, self.BetterBandage)
     foodMacro = defaultFoodMacro:gsub("<%a+>", {
-        ["<food>"] = 'item:'..tostring(best.food[1] and best.food[1].id or 0),
+        ["<food>"] = best.food[1] and 'item:'..tostring(best.food[1].id) or ((SHAMAN and AstralRecall) and "Astral Recall" or 'item:6948'),
         ["<buffFood>"] = 'item:'..tostring(best.buffFood[1] and best.buffFood[1].id or 0),
         ["<bandage>"] = 'item:'..tostring(best.bandage[1] and best.bandage[1].id or 0),
         ["<hPotions>"] = self:BuildSequence(best.healthstone, best.hPotion)
     })
     drinkMacro = defaultDrinkMacro:gsub("<%a+>", {
-        ["<drink>"] = 'item:'..tostring(best.drink[1] and best.drink[1].id or 0),
+        ["<drink>"] = best.drink[1] and 'item:'..tostring(best.drink[1].id) or ((SHAMAN and AstralRecall) and "Astral Recall" or 'item:6948'),
         ["<manaBuff>"] = 'item:'..tostring(best.buffDrink[1] and best.buffDrink[1].id or 0),
         ["<mPotions>"] = self:BuildSequence(best.manaGem, best.mPotion)
     })
@@ -182,7 +185,8 @@ function NeedsFoodBadly:IsUsableBandage(bandage)
 end
 
 function NeedsFoodBadly.BetterFood(a, b)
-    if a.conj and not b.conj then
+    if not a or not b then return end
+	if a.conj and not b.conj then
         return true
     elseif b.conj and not a.conj then
         return false
