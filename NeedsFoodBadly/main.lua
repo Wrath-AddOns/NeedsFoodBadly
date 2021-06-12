@@ -24,7 +24,7 @@ local function CreateOrUpdateMacro(macroName, text)
     end
 end
 local SHAMAN = select(2,UnitClass("player")) == "SHAMAN"
-local AstralRecall = IsSpellKnown(556)
+local AstralRecall
 
 NeedsFoodBadly = CreateFrame("frame")
 NeedsFoodBadly:RegisterEvent("BAG_UPDATE")
@@ -35,10 +35,11 @@ if SHAMAN then NeedsFoodBadly:RegisterEvent("LEARNED_SPELL_IN_TAB") end
 
 NeedsFoodBadly.dirty = false
 NeedsFoodBadly:SetScript("OnEvent", function (self, event, ...)
-    if event == "BAG_UPDATE" or event == "PLAYER_LEVEL_UP" or event == "PLAYER_ENTERING_WORLD" then
+    if event == "BAG_UPDATE" or event == "PLAYER_LEVEL_UP" or event == "PLAYER_ENTERING_WORLD" or (event == "LEARNED_SPELL_IN_TAB" and SHAMAN) then
         if InCombatLockdown() then 
             NeedsFoodBadly.dirty = true
         else
+            AstralRecall = IsSpellKnown(556)
             NeedsFoodBadly:UpdateMacros()
         end
     elseif event == "PLAYER_REGEN_ENABLED" and NeedsFoodBadly.dirty then
